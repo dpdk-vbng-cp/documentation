@@ -11,7 +11,7 @@ On the VM, install salt-master and salt-minion:
 > sudo git clone https://github.com/dpdk-vbng-cp/salt-top.git /srv/salt
 > sudo git clone https://github.com/dpdk-vbng-cp/salt-pillar.git /srv/pillar
 
-Patch two files in /etc/salt directory according to the diff file https://github.com/dpdk-vbng-cp/salt.patch. In addition, change line 16 in /etc/salt/minion to point to localhost _or_ add the the name "salt" to the first line of the /etc/hosts file.
+Patch two files in /etc/salt directory according to the diff file https://github.com/dpdk-vbng-cp/documentation/salt.patch. In addition, change line 16 in /etc/salt/minion to point to localhost _or_ add the the name "salt" to the first line of the /etc/hosts file.
 
 restart the salt-master and salt-minion
 > systemctl restart salt-master
