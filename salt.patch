@@ -1,0 +1,27 @@
+diff salt/master /etc/salt/master
+611,613c611,613
+< #file_roots:
+< #  base:
+< #    - /srv/salt
+---
+> file_roots:
+>   base:
+>     - /srv/salt
+781,783c781,783
+< #pillar_roots:
+< #  base:
+< #    - /srv/pillar
+---
+> pillar_roots:
+>   base:
+>     - /srv/pillar
+Common subdirectories: salt/master.d and /etc/salt/master.d
+diff salt/minion /etc/salt/minion
+120,121c120,122
+< #grains:
+< #  roles:
+---
+> grains:
+>   roles:
+>     - vbng-control
+Common subdirectories: salt/minion.d and /etc/salt/minion.d
