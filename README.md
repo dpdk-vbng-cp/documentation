@@ -6,36 +6,78 @@ You may want to name the machine vbng-ctl, and as the salt pillar data uses this
 
 We decided to use saltstack (https://www.saltstack.com/) for provisioning, which requires a few initial steps to set up salt, but become helpful right after.
 
+Add SaltStack Package Repo:
+
+```bash
+wget -O - https://repo.saltstack.com/apt/ubuntu/18.04/amd64/latest/SALTSTACK-GPG-KEY.pub | sudo apt-key add -
+sudo sh -c 'echo deb http://repo.saltstack.com/apt/ubuntu/18.04/amd64/latest bionic main > /etc/apt/sources.list.d/saltstack.list'
+sudo apt update
+```
+
+Be sure that the Universe repo is enabled:
+```bash
+sudo add-apt-repository universe
+```
+
 On the VM, install salt-master and salt-minion:
-> sudo apt install salt-master salt-minion
-> sudo git clone https://github.com/dpdk-vbng-cp/salt-top.git /srv/salt
-> sudo git clone https://github.com/dpdk-vbng-cp/salt-pillar.git /srv/pillar
 
-Patch two files in /etc/salt directory according to the diff file https://github.com/dpdk-vbng-cp/documentation/salt.patch. In addition, change line 16 in /etc/salt/minion to point to localhost _or_ add the the name "salt" to the first line of the /etc/hosts file.
+```bash
+sudo apt install salt-master salt-minion
+```
 
-restart the salt-master and salt-minion
-> systemctl restart salt-master
-> systemctl restart salt-minion
+Clone the provisioning repos salt-top and salt-pillar: 
 
-make sure you have the 
-> /etc/salt/minion_id 
+```bash
+sudo git clone https://github.com/dpdk-vbng-cp/salt-top.git /srv/salt
+sudo git clone https://github.com/dpdk-vbng-cp/salt-pillar.git /srv/pillar
+```
 
-set to start with 'vbng-ctl*****',  in a FQDN. The master matches on vbng-ctl* in the accepted key. Let the local salt-master accept the key of the salt-minion 
-> salt-key -A
+Point `/etc/salt/master` to the top and pillar repos:
+
+```bash
+sudo perl -i -0pe 's/#file_roots:\n#  base:\n#    - \/srv\/salt\n#/file_roots:\n  base:\n    - \/srv\/salt\n/' /etc/salt/master
+sudo perl -i -0pe 's/#pillar_roots:\n#  base:\n#    - \/srv\/pillar\n#/pillar_roots:\n  base:\n    - \/srv\/pillar\n/' /etc/salt/master
+```
+
+In `/etc/salt/minion` enable the *vbng-control* role:
+
+```bash
+sudo perl -i -0pe 's/#grains:\n#  roles:/grains:\n  roles:\n    - vbng-control/' /etc/salt/minion
+```
+
+Point the salt minion to the salt master at localhost:
+
+```bash
+sudo sed -ie 's/#master: salt/master: localhost/g' /etc/salt/minion
+```
+
+Restart the salt-master and salt-minion:
+
+```bash
+sudo systemctl restart salt-master salt-minion
+```
+
+Make sure the `/etc/salt/minion_id` starts with **vbng-ctl**, in a FQDN (e.g. *vbng-ctl.vbras.bisdn.de*). The master matches on *vbng-ctl** in the accepted key.
+
+Let the local salt-master accept the key of the salt-minion:
+
+```bash
+sudo salt-key -A
+```
+
+And accept the following dialog: 
 > The following keys are going to be accepted:
 > Unaccepted Keys:
 > **************************** (the minion name in /etc/salt/minion_id)
 > Proceed? [n/Y] Y
 > Key for minion **** accepted.
 
-> sudo  salt "*" state.apply
+Apply the salt states to finally trigger the provisioning:
 
-...wait (salt fetches the accel-ppp from our github repo, configures it, builds it, installs it, installs the systemd service file)
-...wait (installs redis-server, installs systemd service file)
-...wait (fetches the redis-connector python script, which ends up in 
-/opt/bng-utils/dpdk-ip-pipeline-cli.py (THIS IS THE ONE TO BE MODIFIED LATER), installs systemd service file)
-
-...installation done.
+```bash
+sudo  salt "*" state.apply
+```
+Wait for salt to finish the provisioning.
 
 Change the file
 
